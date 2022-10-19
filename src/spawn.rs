@@ -88,7 +88,7 @@ pub fn annoyed(
                                 .zip(mesh_indices)
                                 .zip(mesh_weights)
                                 .map(|((pos, indices), weights)| {
-                                    let model = skin_model(&joints, indices, Vec4::from(*weights));
+                                    let model = skin_model(&joints, &indices, Vec4::from(*weights));
                                     model.transform_point3(Vec3::from(*pos))
                                 })
                                 .collect();
