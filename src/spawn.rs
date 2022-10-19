@@ -26,7 +26,7 @@ pub fn annoyed(
     if !run.0 {
         let g = Gltf::open("assets/models/komatsu_forwarder_yellow.glb").unwrap();
         let count = g.meshes().len();
-        match ass.get_mut(&asset_server.load("models/tiger.glb#Scene0")) {
+        match ass.get_mut(&asset_server.load("models/komatsu_forwarder_yellow.glb#Scene0")) {
             //.load("models/animated/Fox.glb#Scene0")) {
             Some(res) => {
                 let player = pr.single();

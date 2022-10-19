@@ -1,4 +1,4 @@
-//tiger
+//komatsu_forwarder_yellow
 use crate::{Player, PlayerChild, Run};
 use bevy::ecs::system::CommandQueue;
 use bevy::gltf::GltfMesh;
@@ -14,8 +14,9 @@ use gltf::Gltf;
 
 pub fn annoyed(
     mut pr: Query<Entity, With<Player>>,
+    mut pc: Query<Entity, With<PlayerChild>>,
     mut plyr: Query<(&GlobalTransform, &Transform), With<Player>>,
-    mut plyq: Query<(&GlobalTransform)>,
+    mut plyq: Query<(&Transform)>,
     skinned_mesh_inverse_bindposes_assets: Res<Assets<SkinnedMeshInverseBindposes>>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -26,60 +27,154 @@ pub fn annoyed(
     mut run: ResMut<Run>,
 ) {
     if !run.0 {
-        let g = Gltf::open("assets/models/tiger.glb").unwrap();
+        let g = Gltf::open("assets/models/komatsu_forwarder_yellow.glb").unwrap();
         let count = g.meshes().len();
-        match ass_world.get_mut(&asset_server.load("models/tiger.glb#Scene0")) {
+        match ass_world.get_mut(&asset_server.load("models/komatsu_forwarder_yellow.glb#Scene0")) {
             //.load("models/animated/Fox.glb#Scene0")) {
             Some(world) => {
+                /////////// bevy gods bless
+                let mut query_two = world.world.query::<(&Handle<Mesh>)>();
+                /*  for (mesh_h) in query_two.iter(&mut world.world) {
+                                    // println!(
+                                    //     "{:?}",
+                                    //     meshes.get(mesh_h).unwrap().attribute(Mesh::ATTRIBUTE_UV_0)
+                                    // );
+                                    if let Some(mesh) = meshes.get(mesh_h) {
+                                        // Get required vertex attributes
+                                        let mesh_positions =
+                                            if let Some(VertexAttributeValues::Float32x3(positions)) =
+                                                { mesh.attribute(Mesh::ATTRIBUTE_POSITION) }
+                                            {
+                                                positions
+                                            } else {
+                                                continue;
+                                            };
+                                        let mesh_indices = if let Some(VertexAttributeValues::Uint16x4(indices)) =
+                                            mesh.attribute(Mesh::ATTRIBUTE_JOINT_INDEX)
+                                        {
+                                            indices
+                                        } else {
+                                            continue;
+                                        };
+                                        let mesh_weights = if let Some(VertexAttributeValues::Float32x4(weights)) =
+                                            mesh.attribute(Mesh::ATTRIBUTE_JOINT_WEIGHT)
+                                        {
+                                            weights
+                                        } else {
+                                            continue;
+                                        };
+
+                                        // get skinned mesh joint models
+                                        // let mut joints = Vec::new();
+                                        /*if let Some(_) = SkinnedMeshJoints::build(
+                                            skinned_mesh,
+                                            &skinned_mesh_inverse_bindposes_assets,
+                                            &plyq,
+                                            &mut joints,
+                                        ) {
+                                            // Use skin model to get world space vertex positions
+                                            let ws_positions: Vec<Vec3> = mesh_positions
+                                                .iter()
+                                                .zip(mesh_indices)
+                                                .zip(mesh_weights)
+                                                .map(|((pos, indices), weights)| {
+                                                    let model = skin_model(&joints, indices, Vec4::from(*weights));
+                                                    model.transform_point3(Vec3::from(*pos))
+                                                })
+                                                .collect();
+                                            //println!("{:?}", ws_positions);
+                                            //compute world space aabb
+                                            let ws_aabb = compute_aabb(&ws_positions).unwrap();
+                                            println!("{:?}", ws_aabb);
+                                        }*/
+                                    }
+                                }
+
+                                fn skin_model(
+                                    joint_matrices: &Vec<Mat4>,
+                                    indexes: &[u16; 4],
+                                    weights: Vec4,
+                                ) -> Mat4 {
+                                    weights.x * joint_matrices[indexes[0] as usize]
+                                        + weights.y * joint_matrices[indexes[1] as usize]
+                                        + weights.z * joint_matrices[indexes[2] as usize]
+                                        + weights.w * joint_matrices[indexes[3] as usize]
+                                }
+
+                                const VEC3_MIN: Vec3 = Vec3::splat(std::f32::MIN);
+                                const VEC3_MAX: Vec3 = Vec3::splat(std::f32::MAX);
+
+                                /// Compute the Axis-Aligned Bounding Box of the mesh vertices in model space
+                                /// from https://github.com/bevyengine/bevy/blob/main/crates/bevy_render/src/mesh/mesh/mod.rs#L375
+                                pub fn compute_aabb(values: &[Vec3]) -> Option<Aabb> {
+                                    let mut minimum = VEC3_MAX;
+                                    let mut maximum = VEC3_MIN;
+                                    for p in values {
+                                        minimum = minimum.min(*p);
+                                        maximum = maximum.max(*p);
+                                    }
+                                    if minimum.x != std::f32::MAX
+                                        && minimum.y != std::f32::MAX
+                                        && minimum.z != std::f32::MAX
+                                        && maximum.x != std::f32::MIN
+                                        && maximum.y != std::f32::MIN
+                                        && maximum.z != std::f32::MIN
+                                    {
+                                        return Some(Aabb::from_min_max(minimum, maximum));
+                                    }
+
+                                    None
+                                }
+                */
                 let mut i = 0;
                 let player = pr.single();
+                //let ps = pc.single();
                 while i < count {
-                    let mut string = "models/tiger.glb#Mesh".to_string() + &*i.to_string();
+                    let mut string =
+                        "models/komatsu_forwarder_yellow.glb#Mesh".to_string() + &*i.to_string();
                     match ass.get_mut(&asset_server.load(string.as_str())) {
                         Some(res) => {
                             let mut query_one = world.world.query::<(Entity, &Handle<Mesh>)>();
                             for (kms, mesh) in query_one.iter_mut(&mut world.world) {
                                 for prim in &res.primitives {
                                     if mesh == &prim.mesh {
+                                        //println!("{:?}", plyq.get(kms));
                                         //commands.entity(kms).remove::<Parent>();
-                                        /*let e = commands
-                                        .spawn()
-                                        .insert(
-                                            Collider::from_bevy_mesh(
-                                                &meshes.get(&prim.mesh).unwrap(),
-                                                &ComputedColliderShape::ConvexDecomposition(
-                                                    VHACDParameters::default(),
-                                                ),
-                                            )
-                                            .unwrap(),
-                                        )
-                                        .id();*/
-                                        println!(
+                                        let vec = &meshes
+                                            .get(&prim.mesh)
+                                            .unwrap()
+                                            .compute_aabb()
+                                            .unwrap()
+                                            .half_extents
+                                            .to_array();
+                                        let collider = Collider::cuboid(
+                                            vec[0], //100.0,
+                                            vec[1], // 100.0,
+                                            vec[2], // 100.0,
+                                        );
+                                        // let e = commands.spawn().insert(collider).id();
+                                        //commands.entity(player)
+                                        //commands.entity(player).insert(collider);
+                                        /*
+                                        let child = commands
+                                            .spawn()
+                                            .insert_bundle(TransformBundle::from(
+                                                Transform::from_xyz(0.0, 0.0, 0.0),
+                                            ))
+                                            .insert(collider)
+                                            .id();*/
+                                        /*    println!(
                                             "{:?}",
                                             &meshes.get(&prim.mesh).unwrap().compute_aabb()
-                                        );
-                                        let parent = commands
-                                            .entity(kms)
-                                            .insert(
-                                                Collider::from_bevy_mesh(
-                                                    &meshes.get(&prim.mesh).unwrap(),
-                                                    &ComputedColliderShape::ConvexDecomposition(
-                                                        VHACDParameters::default(),
-                                                    ),
-                                                )
-                                                .unwrap(),
-                                            )
-                                            .insert(
-                                                Transform::from_xyz(0.0, 0.0, 0.0)
-                                                    .with_rotation(Quat::from_xyzw(
-                                                        0.0, 0.0, 0.0, 0.0,
-                                                    ))
-                                                    .with_scale(Vec3::new(0.01, 0.01, 0.01)),
-                                            )
-                                            .id();
-                                        commands.entity(player).push_children(&[parent]);
+                                        );*/
+                                        //let parent =
+                                        //    commands.entity(kms).insert(RigidBody::Dynamic).id();
+                                        // commands.entity(parent).push_children(&[e]);
+                                        //commands.entity(parent).push_children(&[child]);
+                                        // commands.entity(player).push_children(&[e]);
                                     }
                                 }
+                                //commands.entity(ps).push_children(&[player]);
                                 run.0 = true;
                             }
 

@@ -4,8 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 
+#[lib]
+#name = "bevy"
+#path = "bevy-main/src/lib.rs"
+
 [dependencies]
 bevy = { version = "0.8.1", features=["jpeg"] }
+#bevy = { path="bevy-main", features=["jpeg"] }
 bevy_rapier3d = { version = "0.17.0", features = [ "enhanced-determinism"]}
 gltf = "1.0.0"
 

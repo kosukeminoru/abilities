@@ -8,13 +8,22 @@
 //! A simple 3D scene with light shining over a cube sitting on a plane.
 pub mod ability;
 pub mod spawn;
+pub mod plugme;
 pub mod spawn2;
 use bevy::{
     ecs::component,
     gltf::{GltfMesh, GltfNode, GltfPrimitive},
     math::Vec3A,
+    pbr::wireframe::{Wireframe, WireframeConfig, WireframePlugin},
     prelude::*,
-    render::{mesh, primitives::Aabb, render_asset::RenderAsset},
+    render::{
+        mesh,
+        primitives::Aabb,
+        render_asset::RenderAsset,
+        settings::{WgpuFeatures, WgpuSettings},
+        view::{ExtractedView, VisibleEntities},
+    },
+    utils::tracing::instrument::WithSubscriber,
 };
 use bevy_rapier3d::{
     parry::shape::Cuboid,
@@ -38,7 +47,7 @@ fn main() {
 }*/
 pub struct Run(bool);
 fn main() {
-    let g = Gltf::open("assets/models/tiger.glb").unwrap();
+    let g = Gltf::open("assets/models/komatsu_forwarder_yellow.glb").unwrap();
     println!("{:?}", g.meshes().len());
     let rapier = RapierConfiguration {
         timestep_mode: TimestepMode::Fixed {
@@ -53,8 +62,13 @@ fn main() {
             color: Color::WHITE,
             brightness: 1.0,
         })
+        .insert_resource(WgpuSettings {
+            features: WgpuFeatures::POLYGON_MODE_LINE,
+            ..default()
+        })
         .insert_resource(Run(false))
         .insert_resource(rapier)
+        .add_plugin(WireframePlugin)
         .add_startup_system(setup)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_system(move_player)
@@ -159,6 +173,7 @@ fn lets_get_ass(
 }
 
 fn setup(
+    mut wireframe_config: ResMut<WireframeConfig>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -171,49 +186,67 @@ fn setup(
         asset_server.load("models/animated/dance.glb#Animation0"),
     ]));
     let handle: Handle<Scene> = asset_server.load("models/animated/Fox.glb#Scene0");
-    /*commands
-    .spawn_bundle(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Cube::default())),
-        material: materials.add(Color::rgb(1.0, 1.0, 1.0).into()),
-        transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0)),
-        ..Default::default()
-    })
-    .insert(handle);*/
+    /*commands*/
+    /*
+    commands
+        .spawn_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Cube::default())),
+            material: materials.add(Color::rgb(1.0, 1.0, 1.0).into()),
+            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+            ..Default::default()
+        })
+        .insert(handle);*/
     //.insert(bounding::debug::DebugBounds);
     // plane
+    //wireframe_config.global = true;
+
     commands
         .spawn_bundle(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Plane { size: 10.0 })),
             material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
             ..default()
         })
+        .insert_bundle(TransformBundle::from(
+            Transform::from_xyz(0.0, -2.0, 0.0), //.with_scale(Vec3::new(0.01, 0.01, 0.01)),
+        ))
         .insert(RigidBody::Fixed)
         .insert(Collider::cuboid(5.0, 0.00000000000000001, 5.0));
     // cube
     let parent = commands
         .spawn_bundle(SceneBundle {
-            scene: asset_server.load("models/tiger.glb#Scene0"),
-            transform: Transform::from_xyz(0.0, 00.0, 0.0).with_scale(Vec3::new(1.0, 1.0, 1.0)),
-            global_transform: GlobalTransform::from_xyz(0.0, 0.0, 0.0),
+            scene: asset_server.load("models/komatsu_forwarder_yellow.glb#Scene0"),
+            //transform: Transform::from_xyz(0.0, 0.0, 0.0).with_scale(Vec3::new(10.0, 10.0, 10.0)),
+            //global_transform: GlobalTransform::from_xyz(0.0, 0.0, 0.0),
             ..default()
         })
-        .insert(RigidBody::Dynamic)
-        //.insert(Collider::ball(0.5))
-        .insert(Velocity::default())
         .insert(Player(CoolDowns::new()))
-        .id();
-
-    /*
-    commands
-        .spawn_bundle(SceneBundle {
-            scene: asset_server.load("models/tiger.glb#Scene0"),
-            transform: Transform::from_xyz(0.0, 0.0, 0.0).with_scale(Vec3::new(1.0, 1.0, 1.0)),
-            ..default()
-        })
-        .insert(RigidBody::Dynamic)
+        .insert_bundle(TransformBundle::from(
+            Transform::from_xyz(0.0, 0.0, 0.0).with_scale(Vec3::new(100.0, 100.0, 100.0)),
+        ))
+        //.insert(RigidBody::Dynamic)
         //.insert(Collider::ball(0.5))
-        .insert(Velocity::default())
-        .insert(Terrain);*/
+        //.insert(Velocity::default())
+        .id();
+    /*let c = commands
+    .spawn()
+    .insert(RigidBody::Fixed)
+    .insert_bundle(TransformBundle::from(
+        Transform::from_xyz(0.0, 0.0, 0.0).with_scale(Vec3::new(100.0, 100.0, 100.0)),
+    ))
+    .id();*/
+    //commands.entity(c).push_children(&[parent]);
+    /*
+        commands
+            .spawn_bundle(SceneBundle {
+                scene: asset_server.load("models/komatsu_fo
+    rwarder_yellow.glb#Scene0"),
+                transform: Transform::from_xyz(0.0, 0.0, 0.0).with_scale(Vec3::new(1.0, 1.0, 1.0)),
+                ..default()
+            })
+            .insert(RigidBody::Dynamic)
+            //.insert(Collider::ball(0.5))
+            .insert(Velocity::default())
+            .insert(Terrain);*/
     /*
     commands.spawn_bundle(SceneBundle {
         scene: asset_server.load("tabletop_terrain.glb#Scene0"),
@@ -392,7 +425,15 @@ fn camera_with_parent(
     }
 }*/
 
-fn show_me_kids(q: Query<(&Children)>, qp: Query<(&Parent)>, mut commands: Commands) {
+fn show_me_kids(
+    q: Query<(&Children)>,
+    qp: Query<(&Parent)>,
+    mut commands: Commands,
+    mut views: Query<(&ExtractedView, &VisibleEntities)>,
+) {
+    for (e, v) in views.iter() {
+        println!("{:?}", e.projection);
+    }
     for (c) in q.iter() {
         // println!("{:?}", c);
         // println!("{:?}", child_transform);

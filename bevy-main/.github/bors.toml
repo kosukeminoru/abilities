@@ -1,0 +1,20 @@
+status = [
+    "build (windows-latest)",
+    "build (ubuntu-latest)",
+    "build (macos-latest)",
+    "build-wasm",
+    "build-android",
+    "markdownlint",
+    "run-examples",
+    "run-examples-on-wasm",
+    "check-doc",
+    "check-missing-examples-in-docs",
+    # "check-unused-dependencies",
+    "ci",
+    "check-compiles",
+    "build-and-install-on-iOS",
+    "run-examples-on-windows-dx12",
+]
+
+use_squash_merge = true
+block_labels = ["S-Pre-Relicense"]
